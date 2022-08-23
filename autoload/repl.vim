@@ -20,7 +20,7 @@ function! s:cleanup()
   call jobstop(s:id_job)
   let s:id_window = v:false
   let s:id_job = v:false
-  echom 'repl: closed!'
+  let s:repl_description = v:false
 endfunction
 
 function! s:setup()
@@ -45,9 +45,10 @@ function! repl#open(...)
   endif
   let current_window_id = win_getid()
   let func_args = a:000
-  let command = len(func_args) == 0 ?
+  let s:repl_description = len(func_args) == 0 ?
         \ get(g:repl_filetype_commands, &filetype, g:repl_default) :
         \ func_args[0]
+  let command = type(s:repl_description) == v:t_dict ? get(s:repl_description, 'cmd') : s:repl_description
   if g:repl_split == 'vertical'
     execute 'vertical ' . g:repl_width . 'split new'
   elseif g:repl_split == 'left'
@@ -67,7 +68,6 @@ function! repl#open(...)
   let s:id_window = win_getid()
   call s:setup()
   call win_gotoid(current_window_id)
-  echom 'repl: opened!'
 endfunction
 
 function! repl#close()
@@ -123,6 +123,16 @@ function! repl#send() range
           \ buflines_clean + [bl_clean]
     let count = count + 1
   endwhile
+  if count > 2
+    let before_multiline = get(s:repl_description, 'before_multiline', '')
+    if before_multiline != ''
+      call insert(buflines_clean, before_multiline) " prepend
+    endif
+    let after_multiline = get(s:repl_description, 'after_multiline', '')
+    if after_multiline != ''
+      call add(buflines_clean, after_multiline) " append
+    endif
+  endif
   let buflines_chansend =
         \ a:lastline == line('$') && match(buflines_clean[-1], '^\s\+') == 0 ?
         \ buflines_clean + ['', ''] :

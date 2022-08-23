@@ -27,7 +27,16 @@ endfunction
 " Configuration:
 
 let s:default_commands = {
-      \ 'python': 'python',
+      \ 'python': {
+        \ 'cmd': 'python',
+        \ 'before_multiline': '',
+        \ 'after_multiline': ''
+        \ },
+      \ 'scala': {
+        \ 'cmd': 'scala',
+        \ 'before_multiline': ':paste',
+        \ 'after_multiline': ''
+        \ }
       \ }
 
 let s:allowed_split_values = [
@@ -54,8 +63,8 @@ function! s:configure_constants()
 
   if !exists('g:repl_default')
     let g:repl_default = &shell
-  elseif type(g:repl_default) != v:t_string
-    throw 'g:repl_default must be a String'
+  elseif type(g:repl_default) != v:t_dict || type(g:repl_default) != v:String
+    throw 'g:repl_default must be a Dict or String'
   endif
 
   if !exists('g:repl_split')
